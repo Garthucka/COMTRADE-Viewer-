@@ -1,0 +1,1 @@
+pyinstaller   --noconfirm   --clean   --windowed   --onedir   --name COMTRADE_Viewer   --hidden-import=comtrade   --hidden-import=matplotlib.backends.backend_qtagg   comtrade_viewer.py
