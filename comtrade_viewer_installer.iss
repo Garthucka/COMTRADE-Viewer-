@@ -3,7 +3,7 @@
 ; Optional: place vc_redist.x64.exe рядом с этим .iss, если хотите включить VC++ Redistributable в установщик.
 
 #define MyAppName "COMTRADE Viewer"
-#define MyAppVersion "6.1"
+#define MyAppVersion "10"
 #define MyAppPublisher "Local Build"
 #define MyAppExeName "comtrade_viewer.exe"
 #define MyAppSourceDir "dist\\comtrade_viewer"
@@ -39,14 +39,12 @@ Name: "desktopicon"; Description: "Создать ярлык на рабочем
 
 [Files]
 Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Необязательное включение VC++ Redistributable, если файл лежит рядом со скриптом.
-Source: "vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: FileExists(ExpandConstant('{src}\\vc_redist.x64.exe')); ExternalSize: 0
+Source: "vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: FileExists(ExpandConstant('{src}\\vc_redist.x64.exe'))
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Если redistributable добавлен рядом со скриптом, установим его тихо перед первым запуском приложения.
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Установка Microsoft Visual C++ Redistributable..."; Flags: waituntilterminated; Check: FileExists(ExpandConstant('{tmp}\\vc_redist.x64.exe'))
 Filename: "{app}\{#MyAppExeName}"; Description: "Запустить {#MyAppName}"; Flags: nowait postinstall skipifsilent

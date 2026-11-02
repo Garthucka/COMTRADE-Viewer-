@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['comtrade_viewer_1.py'],
+    ['COMTRADE_Viewer.py'],
     pathex=[],
     binaries=[],
     datas=[],

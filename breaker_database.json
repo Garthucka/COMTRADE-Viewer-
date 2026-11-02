@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "breakers": {
+    "e28d45e4-5ec5-461c-b768-46f1a36b51da": {
+      "uuid": "e28d45e4-5ec5-461c-b768-46f1a36b51da",
+      "name": "VF-12",
+      "comment": "",
+      "voltage_kv": "6 кВ",
+      "created": "2026-10-16T07:04:30+00:00",
+      "updated": "2026-10-16T07:04:30+00:00"
+    }
+  }
+}
