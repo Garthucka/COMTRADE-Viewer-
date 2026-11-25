@@ -120,17 +120,21 @@ def save_breaker_database(
     data: dict,
     path: Optional[Path] = None
 ) -> None:
-    path = Path(path) if path is not None else database_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
+    explicit_path = path is not None
+    target = Path(path) if explicit_path else database_path()
 
     tmp_path = None
+    stage = "Создание каталога базы"
 
     try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        stage = "Создание или запись временного файла"
         with tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
-            dir=path.parent,
-            prefix=path.name + ".",
+            dir=target.parent,
+            prefix=target.name + ".",
             suffix=".tmp",
             delete=False,
         ) as f:
@@ -140,7 +144,23 @@ def save_breaker_database(
             f.flush()
             os.fsync(f.fileno())
 
-        os.replace(tmp_path, path)
+        stage = "Замена основного файла базы"
+        os.replace(tmp_path, target)
+
+    except OSError as exc:
+        details = (
+            f"Стадия: {stage}\n"
+            f"База: {target}\n"
+            f"Временный файл: {tmp_path}\n"
+            f"Путь передан явно: {explicit_path}\n"
+            f"EXE/Python: {sys.executable}\n"
+            f"Frozen: {getattr(sys, 'frozen', False)}\n"
+            f"LOCALAPPDATA: {os.environ.get('LOCALAPPDATA')}\n"
+            f"errno: {exc.errno}\n"
+            f"winerror: {getattr(exc, 'winerror', None)}\n"
+            f"\n{traceback.format_exc()}"
+        )
+        raise RuntimeError(details) from exc
 
     finally:
         if tmp_path is not None:
@@ -148,7 +168,6 @@ def save_breaker_database(
                 tmp_path.unlink(missing_ok=True)
             except OSError:
                 pass
-
 
 def get_info_metadata(data: dict) -> dict:
     ms = data.get("meas_sett") or {}
