@@ -87,7 +87,16 @@ def normalize_uuid(value: Any) -> str:
 
 
 def database_path() -> Path:
-    base = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+    if sys.platform == "win32":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if not local_app_data:
+            raise RuntimeError(
+                "Не определён каталог LOCALAPPDATA для базы выключателей"
+            )
+        base = Path(local_app_data) / "COMTRADE Viewer"
+    else:
+        base = Path.home() / ".comtrade_viewer"
+
     return base / "breaker_database.json"
 
 
@@ -107,21 +116,38 @@ def load_breaker_database(path: Optional[Path] = None) -> dict:
     return data
 
 
-def save_breaker_database(data: dict, path: Optional[Path] = None) -> None:
-    path = path or database_path()
+def save_breaker_database(
+    data: dict,
+    path: Optional[Path] = None
+) -> None:
+    path = Path(path) if path is not None else database_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+
     tmp_path = None
+
     try:
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
-                                         prefix=path.name + ".", suffix=".tmp", delete=False) as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=path.name + ".",
+            suffix=".tmp",
+            delete=False,
+        ) as f:
             tmp_path = Path(f.name)
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.write("\n")
             f.flush()
             os.fsync(f.fileno())
+
         os.replace(tmp_path, path)
+
     finally:
         if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def get_info_metadata(data: dict) -> dict:
@@ -279,7 +305,7 @@ def convert_info_json_to_report(data: dict, source_path: str = "", speed_unit: s
         lines.append(f"  Отскок                         : {op.get('s_rebound', '—')} {val_unit}")
         lines.append(f"  Отскок СВ                      : {op.get('s_rebound_cb', '—')} {val_unit}")
         lines.append(f"  Вжим                           : {op.get('s_react_contactstroke', '—')} {val_unit}")
-        lines.append(f"  Ход после размыкания           : {op.get('s_swipe_afterstroke', '—')} {val_unit}")
+        lines.append(f"  Ход до коммутации              : {op.get('s_swipe_afterstroke', '—')} {val_unit}")
         lines.append(f"  Средняя скорость               : {op.get('s_avg_speed', '—')} {speed_unit}")
         lines.append("")
 
